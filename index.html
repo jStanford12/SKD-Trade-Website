@@ -4,154 +4,197 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>XAUUSD+ Trading Calculator</title>
-  <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 0; background: #0b0c10; color: #e9eef5; }
-    .wrap { max-width: 1500px; margin: 0 auto; padding: 24px; }
-    h1 { margin: 0 0 10px; font-size: 22px; }
-    p { margin: 0 0 16px; opacity: .85; }
+<style>
+  :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  body { margin: 0; background: #0b0c10; color: #e9eef5; }
 
-    .grid { display: grid; gap: 14px; grid-template-columns: repeat(12, 1fr); }
-    .card {
-      grid-column: span 12;
-      background: #121420;
-      border: 1px solid #1f2433;
-      border-radius: 14px;
-      padding: 16px;
-    }
+  /* Mobile-first container */
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 14px; }
+  h1 { margin: 0 0 10px; font-size: 20px; }
+  p { margin: 0 0 14px; opacity: .85; font-size: 13px; }
 
-    /* 3-column desktop layout */
-    @media (min-width: 980px) {
-      .card.inputs  { grid-column: 1 / span 4; }
-      .card.outputs { grid-column: 5 / span 4; }
-      .card.table   { grid-column: 9 / span 4; }
-      .card.explain { grid-column: 1 / span 12; }
-    }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(12, 1fr); }
 
-    .row {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: repeat(12, 1fr);
-      margin-top: 12px;
-      align-items: start;
-    }
+  .card {
+    grid-column: span 12;
+    background: #121420;
+    border: 1px solid #1f2433;
+    border-radius: 14px;
+    padding: 14px;
+  }
 
-    /* Cleaner label behaviour */
-    label{
-      grid-column: span 12;
-      font-size: 12px;
-      opacity: .85;
-      display: block;
-      line-height: 1.25;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
+  /* Desktop: 3 columns */
+  @media (min-width: 980px) {
+    .wrap { padding: 24px; }
+    h1 { font-size: 22px; }
+    p { font-size: 14px; margin-bottom: 16px; }
 
-    input, select, textarea {
-      grid-column: span 12;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #27304a;
-      background: #0f1220;
-      color: #e9eef5;
-      outline: none;
-      width: 100%;
-      box-sizing: border-box;
-    }
+    .card { padding: 16px; }
+    .card.inputs  { grid-column: 1 / span 4; }
+    .card.outputs { grid-column: 5 / span 4; }
+    .card.table   { grid-column: 9 / span 4; }
+    .card.explain { grid-column: 1 / span 12; }
+  }
 
-    textarea {
-      min-height: 90px;
-      resize: vertical;
-    }
+  /* Form rows */
+  .row {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(12, 1fr);
+    margin-top: 12px;
+    align-items: start;
+  }
 
-    /* Make field groups breathe */
-    .half, .third{
-      display: grid;
-      gap: 6px;
-      min-width: 0;
-    }
+  label{
+    grid-column: span 12;
+    font-size: 12px;
+    opacity: .85;
+    display: block;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 
-    /* IMPORTANT: 2-up layout instead of cramped 3-up */
-    @media (min-width: 980px) {
-      .half  { grid-column: span 6; }
-      .third { grid-column: span 6; }
-    }
+  input, select, textarea {
+    grid-column: span 12;
+    padding: 12px 12px;          /* bigger tap target on mobile */
+    border-radius: 12px;
+    border: 1px solid #27304a;
+    background: #0f1220;
+    color: #e9eef5;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;             /* prevents iOS zoom */
+  }
 
-    /* Slightly tighter inputs inside Inputs card */
+  textarea {
+    min-height: 96px;
+    resize: vertical;
+  }
+
+  /* Field groups */
+  .half, .third{
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  /* MOBILE: always 1-up (prevents cramped 2-up) */
+  .half { grid-column: span 12; }
+  .third { grid-column: span 12; }
+
+  /* TABLET/DESKTOP: 2-up */
+  @media (min-width: 720px) {
+    .half  { grid-column: span 6; }
+    .third { grid-column: span 6; }
+  }
+
+  /* Slightly tighter inputs inside Inputs card (desktop only) */
+  @media (min-width: 980px) {
     .card.inputs input,
     .card.inputs select,
     .card.inputs textarea{
       padding: 9px 10px;
-    }
-
-    .out { display: grid; gap: 10px; margin-top: 10px; }
-
-    .metric {
-      border: 1px solid #1f2433;
-      border-radius: 12px;
-      padding: 12px;
-      background: #0f1220;
-    }
-
-    .k { font-size: 12px; opacity: .75; }
-    .v { font-size: 18px; margin-top: 4px; }
-    .small { font-size: 12px; opacity: .8; line-height: 1.45; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-
-    .btns { display:flex; gap:10px; flex-wrap: wrap; margin-top: 12px; }
-
-    button {
-      padding: 10px 12px;
+      font-size: 14px;
       border-radius: 10px;
-      border: 1px solid #27304a;
-      background: #121a33;
-      color: #e9eef5;
-      cursor: pointer;
     }
+  }
 
-    button:hover { filter: brightness(1.08); }
+  .out { display: grid; gap: 10px; margin-top: 10px; }
 
-    details { margin-top: 10px; }
-    summary { cursor: pointer; user-select: none; }
+  .metric {
+    border: 1px solid #1f2433;
+    border-radius: 12px;
+    padding: 12px;
+    background: #0f1220;
+  }
 
-    /* Table styling */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      overflow: hidden;
-      border-radius: 12px;
-    }
+  .k { font-size: 12px; opacity: .75; }
+  .v { font-size: 18px; margin-top: 4px; }
+  .small { font-size: 12px; opacity: .8; line-height: 1.45; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
-    th, td {
-      border-bottom: 1px solid #1f2433;
-      padding: 10px 10px;
-      text-align: right;
-    }
+  /* Buttons: stack nicely on mobile */
+  .btns {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+  }
 
-    th {
-      font-size: 12px;
-      opacity: .85;
-      background: #0f1220;
-      position: sticky;
-      top: 0;
-    }
+  button {
+    padding: 12px 12px;
+    border-radius: 12px;
+    border: 1px solid #27304a;
+    background: #121a33;
+    color: #e9eef5;
+    cursor: pointer;
+    width: 100%;
+  }
 
-    td:first-child, th:first-child {
-      text-align: left;
-    }
+  button:hover { filter: brightness(1.08); }
 
-    .table-wrap {
-      overflow: auto;
-      border-radius: 12px;
-      border: 1px solid #1f2433;
-    }
+  /* Tablet+ buttons inline */
+  @media (min-width: 720px) {
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button { width: auto; }
+  }
 
-    .table-wrap table {
-      margin-top: 0;
-      border-radius: 0;
-    }
-  </style>
+  details { margin-top: 10px; }
+  summary { cursor: pointer; user-select: none; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    overflow: hidden;
+    border-radius: 12px;
+    min-width: 520px; /* ensures columns don't squash on mobile; enables scroll */
+  }
+
+  th, td {
+    border-bottom: 1px solid #1f2433;
+    padding: 10px 10px;
+    text-align: right;
+    white-space: nowrap; /* stops $ values breaking */
+  }
+
+  th {
+    font-size: 12px;
+    opacity: .85;
+    background: #0f1220;
+    position: sticky;
+    top: 0;
+  }
+
+  td:first-child, th:first-child { text-align: left; }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    border: 1px solid #1f2433;
+  }
+
+  .table-wrap table { margin-top: 0; border-radius: 0; }
+
+  /* The ladder header row (RR + toggle) wraps nicely on mobile */
+  .ladder-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* Optional: make the toggle button smaller visually */
+  .btn-mini {
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    font-size: 12px !important;
+  }
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -253,15 +296,15 @@
 
       <div class="card table">
         <h2 style="margin:0 0 6px;font-size:16px;">Lot Ladder</h2>
-        <div class="small" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-          <div>
+        <div class="small ladder-head">
+        <div>
             Rows are lot sizes. Columns are 1 Pip Move, Hit SL, Hit TP1, Hit TP2.
             <span class="mono" id="rrOut" style="margin-left:8px;">RR: —</span>
-          </div>
+        </div>
 
-          <button id="toggleTableCurrency" style="padding:6px 10px; font-size:12px;" type="button">
+        <button id="toggleTableCurrency" class="btn-mini" type="button">
             Show GBP
-          </button>
+        </button>
         </div>
 
         <div class="table-wrap" style="margin-top:10px;">

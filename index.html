@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>XAUUSD+ Trading Calculator</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #0b0c10; color: #e9eef5; }
+    .wrap { max-width: 1500px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 10px; font-size: 22px; }
+    p { margin: 0 0 16px; opacity: .85; }
+
+    .grid { display: grid; gap: 14px; grid-template-columns: repeat(12, 1fr); }
+    .card {
+      grid-column: span 12;
+      background: #121420;
+      border: 1px solid #1f2433;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    /* 3-column desktop layout */
+    @media (min-width: 980px) {
+      .card.inputs  { grid-column: 1 / span 4; }
+      .card.outputs { grid-column: 5 / span 4; }
+      .card.table   { grid-column: 9 / span 4; }
+      .card.explain { grid-column: 1 / span 12; }
+    }
+
+    .row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(12, 1fr);
+      margin-top: 12px;
+      align-items: start;
+    }
+
+    /* Cleaner label behaviour */
+    label{
+      grid-column: span 12;
+      font-size: 12px;
+      opacity: .85;
+      display: block;
+      line-height: 1.25;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    input, select, textarea {
+      grid-column: span 12;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #27304a;
+      background: #0f1220;
+      color: #e9eef5;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    /* Make field groups breathe */
+    .half, .third{
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    /* IMPORTANT: 2-up layout instead of cramped 3-up */
+    @media (min-width: 980px) {
+      .half  { grid-column: span 6; }
+      .third { grid-column: span 6; }
+    }
+
+    /* Slightly tighter inputs inside Inputs card */
+    .card.inputs input,
+    .card.inputs select,
+    .card.inputs textarea{
+      padding: 9px 10px;
+    }
+
+    .out { display: grid; gap: 10px; margin-top: 10px; }
+
+    .metric {
+      border: 1px solid #1f2433;
+      border-radius: 12px;
+      padding: 12px;
+      background: #0f1220;
+    }
+
+    .k { font-size: 12px; opacity: .75; }
+    .v { font-size: 18px; margin-top: 4px; }
+    .small { font-size: 12px; opacity: .8; line-height: 1.45; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    .btns { display:flex; gap:10px; flex-wrap: wrap; margin-top: 12px; }
+
+    button {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #27304a;
+      background: #121a33;
+      color: #e9eef5;
+      cursor: pointer;
+    }
+
+    button:hover { filter: brightness(1.08); }
+
+    details { margin-top: 10px; }
+    summary { cursor: pointer; user-select: none; }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #1f2433;
+      padding: 10px 10px;
+      text-align: right;
+    }
+
+    th {
+      font-size: 12px;
+      opacity: .85;
+      background: #0f1220;
+      position: sticky;
+      top: 0;
+    }
+
+    td:first-child, th:first-child {
+      text-align: left;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid #1f2433;
+    }
+
+    .table-wrap table {
+      margin-top: 0;
+      border-radius: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Kum XAUUSD+ Position / Risk / Margin Calculator</h1>
+    <p>Set your SL/TP distances. The ladder table + explain panel update instantly.</p>
+
+    <div class="grid">
+      <div class="card inputs">
+        <h2 style="margin:0 0 6px;font-size:16px;">Inputs</h2>
+
+        <div class="row">
+          <div class="third">
+            <label for="price">XAUUSD price (USD / oz)</label>
+            <input id="price" type="number" step="0.01" value="5280" />
+          </div>
+          <div class="third">
+            <label for="contractSize">Contract size (oz per 1 lot)</label>
+            <input id="contractSize" type="number" step="1" value="100" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="third">
+            <label for="slPips">Stop-loss distance (pips)</label>
+            <input id="slPips" type="number" step="1" value="100" />
+          </div>
+          <div class="third">
+            <label for="tp1Pips">TP1 distance (pips)</label>
+            <input id="tp1Pips" type="number" step="1" value="30" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="third">
+            <label for="tp2Pips">TP2 distance (pips)</label>
+            <input id="tp2Pips" type="number" step="1" value="300" />
+          </div>
+          <div class="third">
+            <label for="lotInput">Single lot size</label>
+            <input id="lotInput" type="number" step="0.01" value="0.10" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="half">
+            <label for="usdToGbp">USD → GBP Rate</label>
+            <input id="usdToGbp" type="number" step="0.0001" value="0.74" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="half">
+            <label for="ladderLots">Ladder lot sizes (comma-separated)</label>
+            <textarea id="ladderLots" class="mono">0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5</textarea>
+          </div>
+        </div>
+
+        <div class="btns">
+          <button id="btnLoadYourTable">Load your SL/TP defaults</button>
+            <button id="btnRefreshData" type="button">Refresh live data</button>
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;opacity:.85;">
+                <input id="autoLive" type="checkbox" style="width:auto;grid-column:auto;" />
+                Auto-update (every 60s)
+            </label>
+        </div>
+      </div>
+
+      <div class="card outputs">
+        <h2 style="margin:0 0 6px;font-size:16px;">Outputs</h2>
+        <div class="out">
+          <div class="metric">
+            <div class="k">Ounces (oz)</div>
+            <div class="v" id="ozOut">—</div>
+          </div>
+          <div class="metric">
+            <div class="k">Notional value (USD)</div>
+            <div class="v" id="notionalOut">—</div>
+          </div>
+          <div class="metric">
+            <div class="k">Required margin (USD)</div>
+            <div class="v" id="marginOut">—</div>
+          </div>
+          <div class="metric">
+            <div class="k">Pip value (USD / pip)</div>
+            <div class="v" id="pipValueOut">—</div>
+          </div>
+          <div class="metric">
+            <div class="k">If hit SL / TP1 / TP2 (USD)</div>
+            <div class="v" id="targetsOut">—</div>
+            <div class="small" id="targetsDetail">—</div>
+          </div>
+          <div class="metric">
+            <div class="k">Same key figures in GBP</div>
+            <div class="small" id="fxHint">—</div>
+            <div class="small mono" id="acctOut">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card table">
+        <h2 style="margin:0 0 6px;font-size:16px;">Lot Ladder</h2>
+        <div class="small">Rows are lot sizes. Columns are 1 Pip Move, Hit SL, Hit TP1, Hit TP2.</div>
+        <div class="table-wrap" style="margin-top:10px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Lot</th>
+                <th>1 Pip Move</th>
+                <th>Hit SL</th>
+                <th>Hit TP1</th>
+                <th>Hit TP2</th>
+              </tr>
+            </thead>
+            <tbody id="ladderBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card explain">
+        <h2 style="margin:0 0 6px;font-size:16px;">Show or Collapse Explanation</h2>
+        <details>
+          <summary class="small">Show formulas (Updates with your input)</summary>
+          <div class="small mono" id="explainBlock" style="margin-top:10px; white-space: pre-wrap;">—</div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  const inputs = [
+    "price","contractSize",
+    "slPips","tp1Pips","tp2Pips",
+    "lotInput","usdToGbp","ladderLots"
+  ].map($);
+
+  function n(v) {
+    const x = Number(v);
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmtMoney(x, ccy="USD") {
+    if (!Number.isFinite(x)) return "—";
+    return new Intl.NumberFormat(undefined, { style:"currency", currency: ccy, maximumFractionDigits: 2 }).format(x);
+  }
+
+  function fmtNum(x, digits=2) {
+    if (!Number.isFinite(x)) return "—";
+    return new Intl.NumberFormat(undefined, { maximumFractionDigits: digits }).format(x);
+  }
+
+  function fmtUsd(x) {
+    if (!Number.isFinite(x)) return "—";
+    return "$" + new Intl.NumberFormat(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(x);
+  }
+
+  function parseLots(text) {
+    return String(text || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter(v => Number.isFinite(v) && v > 0);
+  }
+
+  // Fixed broker/product rules
+  const LEVERAGE = 500;   // 1:500
+  const PIP_PER_OZ = 0.1; // $0.10 per oz per pip
+  const PIP_SIZE = 0.1;   // price units per pip (for the "≈ price/oz" hint)
+
+  function coreForLot(lot, price, contractSize, slPips, tp1Pips, tp2Pips) {
+    const ozExposure = lot * contractSize;
+    const notionalUsd = ozExposure * price;
+    const marginUsd = notionalUsd / LEVERAGE;
+    const pipValueUsd = ozExposure * PIP_PER_OZ;
+
+    const slUsd = -pipValueUsd * slPips;
+    const tp1Usd = pipValueUsd * tp1Pips;
+    const tp2Usd = pipValueUsd * tp2Pips;
+
+    return { ozExposure, notionalUsd, marginUsd, pipValueUsd, slUsd, tp1Usd, tp2Usd };
+  }
+
+async function fetchUsdGbp() {
+  const url = "https://open.er-api.com/v6/latest/USD";
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("FX fetch failed");
+  const data = await res.json();
+
+  const rate = data?.rates?.GBP;
+  if (!Number.isFinite(rate)) throw new Error("Bad FX data");
+
+  $("usdToGbp").value = rate.toFixed(4);
+}
+
+async function fetchXauUsd() {
+  const url = "https://giavang.now/api/prices?type=XAUUSD";
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("XAUUSD fetch failed");
+
+  const data = await res.json();
+
+  // Convert values like "2,030.15" / "$2030.15" -> 2030.15
+  // BUT: if it cleans to "" then return NaN (NOT 0)
+  const toNum = (v) => {
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+    if (typeof v !== "string") return NaN;
+
+    const cleaned = v.replace(/[^0-9.\-]/g, "");
+    if (!cleaned || !/[0-9]/.test(cleaned)) return NaN; // prevent Number("") -> 0
+
+    const num = Number(cleaned);
+    return Number.isFinite(num) ? num : NaN;
+  };
+
+  // Prefer matching the correct row if the API returns multiple entries
+  const rows = Array.isArray(data?.data) ? data.data : [];
+  const row =
+    rows.find(r => String(r?.type || r?.symbol || r?.name || "").toUpperCase().includes("XAUUSD")) ||
+    rows[0] ||
+    null;
+
+  const candidates = [
+    row?.sell, row?.buy,
+    row?.ask, row?.bid,
+    row?.price,
+    data?.sell, data?.buy,
+    data?.ask, data?.bid,
+    data?.price
+  ];
+
+  // Find first reasonable XAUUSD price (sanity range stops picking 0 or nonsense)
+  let price = NaN;
+  for (const c of candidates) {
+    const n = toNum(c);
+    if (Number.isFinite(n) && n > 100 && n < 20000) { // adjust if you want
+      price = n;
+      break;
+    }
+  }
+
+  if (!Number.isFinite(price)) {
+    console.log("XAUUSD raw response:", data);
+    throw new Error("Bad XAUUSD data (see console: XAUUSD raw response)");
+  }
+
+  return price;
+}
+
+async function refreshLiveData() {
+  try {
+    await fetchUsdGbp(); // your working FX function
+  } catch (e) {
+    console.warn(e);
+  }
+
+  try {
+    const gold = await fetchXauUsd();
+    $("price").value = gold.toFixed(2);
+  } catch (e) {
+    console.warn(e);
+  }
+
+  compute();
+}
+
+$("btnRefreshData").addEventListener("click", refreshLiveData);
+
+let liveTimer = null;
+$("autoLive").addEventListener("change", () => {
+  if ($("autoLive").checked) {
+    refreshLiveData();
+    liveTimer = setInterval(refreshLiveData, 60_000);
+  } else {
+    clearInterval(liveTimer);
+    liveTimer = null;
+  }
+});
+
+  function compute() {
+    const price = n($("price").value);
+    const contractSize = n($("contractSize").value);
+
+    const slPips = n($("slPips").value);
+    const tp1Pips = n($("tp1Pips").value);
+    const tp2Pips = n($("tp2Pips").value);
+
+    const lot = n($("lotInput").value);
+
+    const rate = n($("usdToGbp").value); // USD → GBP
+    const fxOk = Number.isFinite(rate) && rate > 0;
+
+    // Single-lot
+    const one = coreForLot(lot, price, contractSize, slPips, tp1Pips, tp2Pips);
+
+    $("ozOut").textContent = fmtNum(one.ozExposure, 2);
+    $("notionalOut").textContent = fmtMoney(one.notionalUsd, "USD");
+    $("marginOut").textContent = fmtMoney(one.marginUsd, "USD");
+    $("pipValueOut").textContent = fmtMoney(one.pipValueUsd, "USD");
+
+    $("targetsOut").textContent =
+      `${fmtMoney(one.slUsd, "USD")} / ${fmtMoney(one.tp1Usd, "USD")} / ${fmtMoney(one.tp2Usd, "USD")}`;
+
+    const movePriceSl = slPips * PIP_SIZE;
+    const movePriceTp1 = tp1Pips * PIP_SIZE;
+    const movePriceTp2 = tp2Pips * PIP_SIZE;
+
+    $("targetsDetail").textContent =
+      `SL ${fmtNum(slPips,0)} pips (≈ ${fmtNum(movePriceSl,2)} price/oz), TP1 ${fmtNum(tp1Pips,0)} pips (≈ ${fmtNum(movePriceTp1,2)}), TP2 ${fmtNum(tp2Pips,0)} pips (≈ ${fmtNum(movePriceTp2,2)})`;
+
+    // FX line (GBP only)
+    $("fxHint").textContent = fxOk
+      ? `Using USD→GBP rate: ${fmtNum(rate,4)}`
+      : "Set a valid USD→GBP rate.";
+
+    $("acctOut").textContent = fxOk
+      ? `Notional: ${fmtMoney(one.notionalUsd*rate, "GBP")}  |  Margin: ${fmtMoney(one.marginUsd*rate, "GBP")}  |  £/pip: ${fmtMoney(one.pipValueUsd*rate, "GBP")}  |  SL/TP1/TP2: ${fmtMoney(one.slUsd*rate, "GBP")} / ${fmtMoney(one.tp1Usd*rate, "GBP")} / ${fmtMoney(one.tp2Usd*rate, "GBP")}`
+      : "—";
+
+    // Ladder table
+    const lots = parseLots($("ladderLots").value);
+    const tbody = $("ladderBody");
+    tbody.innerHTML = "";
+
+    for (const L of lots) {
+      const r = coreForLot(L, price, contractSize, slPips, tp1Pips, tp2Pips);
+
+      const tr = document.createElement("tr");
+
+      const cLot = document.createElement("td");
+      cLot.textContent = fmtNum(L, 2);
+      tr.appendChild(cLot);
+
+      const cPip = document.createElement("td");
+      cPip.textContent = fmtUsd(r.pipValueUsd);
+      tr.appendChild(cPip);
+
+      const cSL = document.createElement("td");
+      cSL.textContent  = fmtUsd(r.slUsd);
+      tr.appendChild(cSL);
+
+      const cTP1 = document.createElement("td");
+      cTP1.textContent = fmtUsd(r.tp1Usd);
+      tr.appendChild(cTP1);
+
+      const cTP2 = document.createElement("td");
+      cTP2.textContent = fmtUsd(r.tp2Usd);
+      tr.appendChild(cTP2);
+
+      tbody.appendChild(tr);
+    }
+
+    // Explain panel (step-by-step)
+    const oz = one.ozExposure;
+    const explain =
+`Fixed settings:
+  Leverage = 1:${LEVERAGE}
+  Pip value per oz = $${fmtNum(PIP_PER_OZ,2)} per pip per oz
+  Pip size = ${fmtNum(PIP_SIZE,2)} price units per pip
+
+1) Ounces
+   ozExposure = lot × contractSize
+             = ${fmtNum(lot,2)} × ${fmtNum(contractSize,0)}
+             = ${fmtNum(oz,2)} oz
+
+2) Notional value (USD)
+   notional = ozExposure × price
+           = ${fmtNum(oz,2)} × ${fmtNum(price,2)}
+           = ${fmtNum(one.notionalUsd,2)} USD
+
+3) Margin required (USD)
+   margin = notional / leverage
+          = ${fmtNum(one.notionalUsd,2)} / ${fmtNum(LEVERAGE,0)}
+          = ${fmtNum(one.marginUsd,2)} USD
+
+4) Pip value (USD per pip)
+   pipValue = ozExposure × pipPerOz
+            = ${fmtNum(oz,2)} × ${fmtNum(PIP_PER_OZ,2)}
+            = ${fmtNum(one.pipValueUsd,2)} USD/pip
+
+5) SL/TP money outcomes (USD)
+   SL$  = -pipValue × SLpips  = -${fmtNum(one.pipValueUsd,2)} × ${fmtNum(slPips,0)} = ${fmtNum(one.slUsd,2)}
+   TP1$ =  pipValue × TP1pips =  ${fmtNum(one.pipValueUsd,2)} × ${fmtNum(tp1Pips,0)} = ${fmtNum(one.tp1Usd,2)}
+   TP2$ =  pipValue × TP2pips =  ${fmtNum(one.pipValueUsd,2)} × ${fmtNum(tp2Pips,0)} = ${fmtNum(one.tp2Usd,2)}
+
+(Optional) Converting pips → price move per oz
+   priceMove = pips × pipSize
+   SL move:  ${fmtNum(slPips,0)} × ${fmtNum(PIP_SIZE,2)} = ${fmtNum(slPips*PIP_SIZE,2)} (USD/oz)
+   TP1 move: ${fmtNum(tp1Pips,0)} × ${fmtNum(PIP_SIZE,2)} = ${fmtNum(tp1Pips*PIP_SIZE,2)} (USD/oz)
+   TP2 move: ${fmtNum(tp2Pips,0)} × ${fmtNum(PIP_SIZE,2)} = ${fmtNum(tp2Pips*PIP_SIZE,2)} (USD/oz)
+
+(Optional) USD → GBP
+   valueGBP = valueUSD × rate
+   rate = ${fxOk ? fmtNum(rate,4) : "—"}
+`;
+    $("explainBlock").textContent = explain;
+  }
+
+  inputs.forEach(el => el.addEventListener("input", compute));
+
+  $("btnLoadYourTable").addEventListener("click", () => {
+    $("slPips").value = 100;
+    $("tp1Pips").value = 30;
+    $("tp2Pips").value = 300;
+    $("contractSize").value = 100;
+    $("ladderLots").value = "0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5";
+    compute();
+  });
+
+  compute();
+</script>
+</body>
+</html>

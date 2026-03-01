@@ -239,7 +239,7 @@
             <div class="v" id="pipValueOut">—</div>
           </div>
           <div class="metric">
-            <div class="k">If hit SL / TP1 / TP2 (USD)</div>
+            <div class="k">SL / TP1 / TP2 (USD)</div>
             <div class="v" id="targetsOut">—</div>
             <div class="small" id="targetsDetail">—</div>
           </div>
@@ -253,7 +253,9 @@
 
       <div class="card table">
         <h2 style="margin:0 0 6px;font-size:16px;">Lot Ladder</h2>
-        <div class="small">Rows are lot sizes. Columns are 1 Pip Move, Hit SL, Hit TP1, Hit TP2.</div>
+        <div class="small">Rows are lot sizes. Columns are 1 Pip Move, Hit SL, Hit TP1, Hit TP2.
+            <span class="mono" id="rrOut" style="margin-left:8px;">RR: —</span>
+        </div>
         <div class="table-wrap" style="margin-top:10px;">
           <table>
             <thead>
@@ -507,6 +509,14 @@ $("autoLive").addEventListener("change", () => {
 
       tbody.appendChild(tr);
     }
+
+    const rr = (Number.isFinite(slPips) && slPips > 0 && Number.isFinite(tp2Pips))
+        ? (tp2Pips / slPips)
+        : NaN;
+
+    $("rrOut").textContent = Number.isFinite(rr)
+        ? `RR (TP2/SL): ${rr.toFixed(2)}`
+        : "RR: —";
 
     // Explain panel (step-by-step)
     const oz = one.ozExposure;

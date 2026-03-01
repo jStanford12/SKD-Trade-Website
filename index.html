@@ -143,16 +143,21 @@
   details { margin-top: 10px; }
   summary { cursor: pointer; user-select: none; }
 
-  /* Table */
-  table {
+    table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
     overflow: hidden;
     border-radius: 12px;
-    min-width: 520px; /* ensures columns don't squash on mobile; enables scroll */
-  }
+    }
 
+    /* Only force horizontal scroll behaviour on small screens */
+    @media (max-width: 720px) {
+    table {
+        min-width: 520px;
+    }
+    }
+    
   th, td {
     border-bottom: 1px solid #1f2433;
     padding: 10px 10px;
@@ -531,9 +536,6 @@
     const movePriceSl = slPips * PIP_SIZE;
     const movePriceTp1 = tp1Pips * PIP_SIZE;
     const movePriceTp2 = tp2Pips * PIP_SIZE;
-
-    $("targetsDetail").textContent =
-      `SL ${fmtNum(slPips,0)} pips (≈ ${fmtNum(movePriceSl,2)} price/oz), TP1 ${fmtNum(tp1Pips,0)} pips (≈ ${fmtNum(movePriceTp1,2)}), TP2 ${fmtNum(tp2Pips,0)} pips (≈ ${fmtNum(movePriceTp2,2)})`;
 
     // FX line (GBP only)
     $("fxHint").textContent = fxOk

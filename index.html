@@ -157,7 +157,7 @@
         min-width: 520px;
     }
     }
-    
+
   th, td {
     border-bottom: 1px solid #1f2433;
     padding: 10px 10px;
@@ -426,55 +426,32 @@
     $("usdToGbp").value = rate.toFixed(4);
   }
 
-  async function fetchXauUsd() {
-    const url = "https://giavang.now/api/prices?type=XAUUSD";
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("XAUUSD fetch failed");
+async function fetchXauUsd() {
+  const API_KEY = "YM7UTYCHOYFNRUBDDYRP229BDDYRP";
 
-    const data = await res.json();
+  const url = `https://api.metals.dev/v1/metal/spot?api_key=YM7UTYCHOYFNRUBDDYRP229BDDYRP&metal=gold&currency=USD`;
 
-    const toNum = (v) => {
-      if (typeof v === "number" && Number.isFinite(v)) return v;
-      if (typeof v !== "string") return NaN;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Metals.dev fetch failed");
 
-      const cleaned = v.replace(/[^0-9.\-]/g, "");
-      if (!cleaned || !/[0-9]/.test(cleaned)) return NaN;
+  const data = await res.json();
 
-      const num = Number(cleaned);
-      return Number.isFinite(num) ? num : NaN;
-    };
-
-    const rows = Array.isArray(data?.data) ? data.data : [];
-    const row =
-      rows.find(r => String(r?.type || r?.symbol || r?.name || "").toUpperCase().includes("XAUUSD")) ||
-      rows[0] ||
-      null;
-
-    const candidates = [
-      row?.sell, row?.buy,
-      row?.ask, row?.bid,
-      row?.price,
-      data?.sell, data?.buy,
-      data?.ask, data?.bid,
-      data?.price
-    ];
-
-    let price = NaN;
-    for (const c of candidates) {
-      const nn = toNum(c);
-      if (Number.isFinite(nn) && nn > 100 && nn < 20000) {
-        price = nn;
-        break;
-      }
-    }
-
-    if (!Number.isFinite(price)) {
-      console.log("XAUUSD raw response:", data);
-      throw new Error("Bad XAUUSD data (see console: XAUUSD raw response)");
-    }
-
-    return price;
+  if (data?.status !== "success") {
+    console.log("Metals.dev raw response:", data);
+    throw new Error("Metals.dev bad response");
   }
+
+  const price = Number(data?.rate?.bid);
+  // You could also use bid or ask instead:
+  // const price = Number(data?.rate?.bid);
+
+  if (!Number.isFinite(price)) {
+    console.log("Metals.dev raw response:", data);
+    throw new Error("Invalid XAUUSD price");
+  }
+
+  return price;
+}
 
   async function refreshLiveData() {
     try { await fetchUsdGbp(); } catch (e) { console.warn(e); }

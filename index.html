@@ -510,12 +510,10 @@ $("autoLive").addEventListener("change", () => {
       tbody.appendChild(tr);
     }
 
-    const rr = (Number.isFinite(slPips) && slPips > 0 && Number.isFinite(tp2Pips))
-        ? (tp2Pips / slPips)
-        : NaN;
+    const rr = tp2Pips / slPips;
 
     $("rrOut").textContent = Number.isFinite(rr)
-        ? `RR (TP2/SL): ${rr.toFixed(2)}`
+        ? `RR: 1:${Number.isInteger(rr) ? rr : rr.toFixed(2)}`
         : "RR: —";
 
     // Explain panel (step-by-step)

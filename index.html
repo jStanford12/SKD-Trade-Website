@@ -363,7 +363,6 @@
 
     <div class="card">
       <h2 style="margin:0 0 6px;font-size:16px;">Risk Flow (scenario)</h2>
-      <div class="small">Pick outcomes per trade and see the running balance update.</div>
 
       <div class="row">
         <div class="third">
@@ -378,9 +377,8 @@
 
       <div class="row">
         <div class="full">
-          <label for="flowLots">Flow lots (comma-separated)</label>
+          <label for="flowLots">Flow lots</label>
           <input id="flowLots" type="text" value="0.1,0.05,0.03" class="mono" />
-          <div class="small" style="margin-top:6px;opacity:.8;">Example matches your sketch.</div>
         </div>
       </div>
 
@@ -671,7 +669,7 @@
       const end = document.createElement("div");
       end.className = "flow-end";
       end.innerHTML = `<div class="flow-title">End day on ${fmtUsd(bal)}</div>
-                       <div class="small">This is based on the outcomes you selected.</div>`;
+                       <div class="small">Pray to god we are in profit</div>`;
       flowEl.appendChild(end);
     }
   }

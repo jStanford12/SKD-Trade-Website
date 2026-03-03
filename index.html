@@ -199,6 +199,45 @@
     border-radius: 10px !important;
     font-size: 12px !important;
   }
+
+  /* Risk flow */
+  .flow { display: grid; gap: 12px; margin-top: 10px; }
+  .flow-node {
+    border: 1px solid #1f2433;
+    background: #0f1220;
+    border-radius: 14px;
+    padding: 12px;
+  }
+  .flow-top { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center; }
+  .flow-title { font-weight: 700; }
+  .flow-sub { font-size: 12px; opacity: .85; margin-top: 4px; }
+  .flow-grid { display:grid; gap: 8px; margin-top: 10px; }
+  @media (min-width: 720px) { .flow-grid { grid-template-columns: 1fr 1fr; } }
+
+  .badge {
+    display:inline-block;
+    border: 1px solid #27304a;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 12px;
+    opacity: .9;
+  }
+
+  .flow-bubble {
+    border: 1px solid #27304a;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    width: fit-content;
+    background: #121a33;
+  }
+
+  .flow-end {
+    border: 1px dashed #27304a;
+    border-radius: 14px;
+    padding: 12px;
+    background: rgba(18, 26, 51, 0.35);
+  }
 </style>
 </head>
 
@@ -211,17 +250,17 @@
     <div class="card inputs">
       <h2 style="margin:0 0 6px;font-size:16px;">Inputs</h2>
 
-        <div class="row">
+      <div class="row">
         <div class="third">
-            <label for="price">XAUUSD price (USD / oz)</label>
-            <input id="price" type="number" step="0.01" value="5280" />
+          <label for="price">XAUUSD price (USD / oz)</label>
+          <input id="price" type="number" step="0.01" value="5280" />
         </div>
 
         <div class="third">
-            <label for="usdToGbp">USD → GBP Rate</label>
-            <input id="usdToGbp" type="number" step="0.0001" value="0.74" />
+          <label for="usdToGbp">USD → GBP Rate</label>
+          <input id="usdToGbp" type="number" step="0.0001" value="0.74" />
         </div>
-        </div>
+      </div>
 
       <div class="row">
         <div class="third">
@@ -245,12 +284,12 @@
         </div>
       </div>
 
-        <div class="row">
+      <div class="row">
         <div class="full">
-            <label for="ladderLots">Ladder lot sizes (comma-separated)</label>
-            <textarea id="ladderLots" class="mono">0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5</textarea>
+          <label for="ladderLots">Ladder lot sizes (comma-separated)</label>
+          <textarea id="ladderLots" class="mono">0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5</textarea>
         </div>
-        </div>
+      </div>
 
       <div class="btns">
         <button id="btnLoadYourTable">Load your SL/TP defaults</button>
@@ -320,6 +359,32 @@
           <tbody id="ladderBody"></tbody>
         </table>
       </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px;font-size:16px;">Risk Flow (scenario)</h2>
+      <div class="small">Pick outcomes per trade and see the running balance update.</div>
+
+      <div class="row">
+        <div class="third">
+          <label for="startBal">Starting balance (USD)</label>
+          <input id="startBal" type="number" step="0.01" value="300" />
+        </div>
+        <div class="third">
+          <label for="stopBelow">Stop if balance falls below (USD)</label>
+          <input id="stopBelow" type="number" step="0.01" value="0" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="full">
+          <label for="flowLots">Flow lots (comma-separated)</label>
+          <input id="flowLots" type="text" value="0.1,0.05,0.03" class="mono" />
+          <div class="small" style="margin-top:6px;opacity:.8;">Example matches your sketch.</div>
+        </div>
+      </div>
+
+      <div id="flow" class="flow"></div>
     </div>
 
     <div class="card explain">
@@ -504,6 +569,113 @@
     compute();
   });
 
+  // ---- Risk Flow ----
+  const flowState = {
+    outcomes: [] // 0=SL, 1=TP1, 2=TP2 per trade index
+  };
+
+  function parseFlowLots(text) {
+    return String(text || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter(v => Number.isFinite(v) && v > 0);
+  }
+
+  function outcomePnlUsd(r, outcomeIdx) {
+    if (outcomeIdx === 0) return r.slUsd;   // already negative
+    if (outcomeIdx === 1) return r.tp1Usd;
+    return r.tp2Usd;
+  }
+
+  function renderRiskFlow() {
+    const flowEl = $("flow");
+    if (!flowEl) return;
+
+    const price = n($("price").value);
+    const slPips = n($("slPips").value);
+    const tp1Pips = n($("tp1Pips").value);
+    const tp2Pips = n($("tp2Pips").value);
+
+    const startBal = n($("startBal")?.value);
+    const stopBelow = n($("stopBelow")?.value);
+
+    const lots = parseFlowLots($("flowLots")?.value);
+
+    // Ensure outcomes length
+    while (flowState.outcomes.length < lots.length) flowState.outcomes.push(2); // default TP2
+    flowState.outcomes = flowState.outcomes.slice(0, lots.length);
+
+    flowEl.innerHTML = "";
+
+    let bal = Number.isFinite(startBal) ? startBal : 0;
+    let stopped = false;
+
+    lots.forEach((lot, i) => {
+      const r = coreForLot(lot, price, slPips, tp1Pips, tp2Pips); // ✅ fixed call
+      const outcome = flowState.outcomes[i] ?? 2;
+      const pnl = outcomePnlUsd(r, outcome);
+
+      const before = bal;
+      if (!stopped) bal = bal + pnl;
+
+      const node = document.createElement("div");
+      node.className = "flow-node";
+
+      node.innerHTML = `
+        <div class="flow-top">
+          <div>
+            <div class="flow-title">Trade #${i + 1} <span class="badge">lot ${fmtNum(lot, 2)}</span></div>
+            <div class="flow-sub">1 pip move: ${fmtUsd(r.pipValueUsd)} • SL: ${fmtUsd(r.slUsd)} • TP1: ${fmtUsd(r.tp1Usd)} • TP2: ${fmtUsd(r.tp2Usd)}</div>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <label class="small" style="margin:0;opacity:.75;">Outcome</label>
+            <select data-flow-idx="${i}" style="width:auto;grid-column:auto;">
+              <option value="0">Hit SL</option>
+              <option value="1">Hit TP1</option>
+              <option value="2">Hit TP2</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flow-grid">
+          <div class="flow-bubble">Before: ${fmtUsd(before)}</div>
+          <div class="flow-bubble">After: ${stopped ? "— (stopped)" : fmtUsd(bal)}</div>
+        </div>
+      `;
+
+      const sel = node.querySelector("select");
+      sel.value = String(outcome);
+      sel.addEventListener("change", (e) => {
+        flowState.outcomes[i] = Number(e.target.value);
+        renderRiskFlow();
+      });
+
+      flowEl.appendChild(node);
+
+      // Stop rule check
+      if (!stopped && Number.isFinite(stopBelow) && bal <= stopBelow) {
+        stopped = true;
+
+        const end = document.createElement("div");
+        end.className = "flow-end";
+        end.innerHTML = `<div class="flow-title">Stop trading</div>
+                         <div class="small">Balance fell to ${fmtUsd(bal)} (≤ ${fmtUsd(stopBelow)}).</div>`;
+        flowEl.appendChild(end);
+      }
+    });
+
+    if (!stopped) {
+      const end = document.createElement("div");
+      end.className = "flow-end";
+      end.innerHTML = `<div class="flow-title">End day on ${fmtUsd(bal)}</div>
+                       <div class="small">This is based on the outcomes you selected.</div>`;
+      flowEl.appendChild(end);
+    }
+  }
+
   function compute() {
     const price = n($("price").value);
 
@@ -635,9 +807,16 @@
   rate = ${fxOk ? fmtNum(rate,4) : "—"}
 `;
     $("explainBlock").textContent = explain;
+
+    renderRiskFlow();
   }
 
   inputs.forEach(el => el.addEventListener("input", compute));
+
+  ["startBal","stopBelow","flowLots"].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener("input", compute);
+  });
 
   $("btnLoadYourTable").addEventListener("click", () => {
     $("slPips").value = 100;
@@ -647,6 +826,7 @@
     compute();
   });
 
+  // ✅ call after everything (including flowState) exists
   compute();
 </script>
 </body>

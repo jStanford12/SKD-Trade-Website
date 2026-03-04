@@ -362,6 +362,34 @@
     </div>
 
     <div class="card">
+  <h2 style="margin:0 0 6px;font-size:16px;">Price Move Calculator</h2>
+  <div class="small">Enter entry price, exit price and lot size to see the potential profit or loss.</div>
+
+  <div class="row">
+    <div class="third">
+      <label for="entryPrice">Entry Price</label>
+      <input id="entryPrice" type="number" step="0.01" value="5000">
+    </div>
+
+    <div class="third">
+      <label for="exitPrice">Exit Price</label>
+      <input id="exitPrice" type="number" step="0.01" value="5100">
+    </div>
+
+    <div class="third">
+      <label for="calcLot">Lot Size</label>
+      <input id="calcLot" type="number" step="0.01" value="0.1">
+    </div>
+  </div>
+
+  <div class="metric" style="margin-top:12px;">
+    <div class="k">Profit / Loss</div>
+    <div class="v" id="priceMoveResult">—</div>
+    <div class="small" id="priceMoveDetail">—</div>
+  </div>
+</div>
+
+    <div class="card">
       <h2 style="margin:0 0 6px;font-size:16px;">Risk Flow (scenario)</h2>
 
       <div class="row">
@@ -566,6 +594,35 @@
     $("toggleTableCurrency").textContent = tableCurrency === "USD" ? "Show GBP" : "Show USD";
     compute();
   });
+
+  ["entryPrice","exitPrice","calcLot"].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener("input", computePriceMove);
+  });
+
+  function computePriceMove() {
+  const entry = n($("entryPrice")?.value);
+  const exit = n($("exitPrice")?.value);
+  const lot = n($("calcLot")?.value);
+
+  if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(lot)) {
+    $("priceMoveResult").textContent = "—";
+    return;
+  }
+
+  const move = exit - entry;
+  const oz = lot * CONTRACT_SIZE;
+
+  const pnl = move * oz;
+
+  const label = pnl >= 0 ? "Profit" : "Loss";
+
+  $("priceMoveResult").textContent =
+    `${label}: ${fmtUsd(pnl)}`;
+
+  $("priceMoveDetail").textContent =
+    `Move: ${fmtNum(move,2)} × ${fmtNum(oz,2)} oz = ${fmtUsd(pnl)}`;
+}
 
   // ---- Risk Flow ----
   const flowState = {
@@ -823,6 +880,8 @@
     $("ladderLots").value = "0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5";
     compute();
   });
+
+  computePriceMove();
 
   // ✅ call after everything (including flowState) exists
   compute();

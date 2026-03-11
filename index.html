@@ -3,41 +3,233 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>XAUUSD+ Trading Calculator</title>
+<title>Kum XAUUSD+ Command Center</title>
 
 <style>
-  :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-  body { margin: 0; background: #0b0c10; color: #e9eef5; }
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+  :root {
+    font-family: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+    color-scheme: dark;
+    --bg: #0b0b0f;
+    --ink: #f7f2e8;
+    --muted: rgba(247, 242, 232, 0.7);
+    --card: rgba(18, 16, 14, 0.86);
+    --stroke: rgba(200, 162, 74, 0.22);
+    --accent: #d9b35f;
+    --accent-2: #8c6a2a;
+    --gold: #f0c86b;
+    --shadow: 0 12px 34px rgba(0,0,0,0.45), 0 0 0 1px rgba(200, 162, 74, 0.18);
+  }
 
-  /* Mobile-first container */
-  .wrap { max-width: 1500px; margin: 0 auto; padding: 14px; }
-  h1 { margin: 0 0 10px; font-size: 20px; }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: radial-gradient(900px 520px at 10% -10%, rgba(217, 179, 95, 0.18) 0%, rgba(11, 11, 15, 0) 60%),
+                radial-gradient(900px 600px at 90% 0%, rgba(140, 106, 42, 0.22) 0%, rgba(11, 11, 15, 0) 60%),
+                #0b0b0f;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    inset: auto;
+    width: 520px;
+    height: 520px;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.35;
+    z-index: -1;
+    pointer-events: none;
+  }
+  body::before {
+    background: var(--accent);
+    left: -160px;
+    top: -120px;
+    animation: drift 14s ease-in-out infinite;
+  }
+  body::after {
+    background: var(--accent-2);
+    right: -140px;
+    bottom: -120px;
+    animation: drift 18s ease-in-out infinite;
+  }
+
+  @keyframes drift {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(12px, -18px, 0) scale(1.04); }
+    100% { transform: translate3d(0, 0, 0) scale(1); }
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px) scale(0.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    padding: 20px;
+    background: rgba(12, 10, 8, 0.95);
+    border-right: 1px solid var(--stroke);
+  }
+
+  .brand {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    font-size: 14px;
+    text-transform: uppercase;
+  }
+
+  .brand-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .nav {
+    display: grid;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .nav-item {
+    background: transparent !important;
+    border: 1px solid transparent;
+    color: var(--muted);
+    padding: 10px 12px;
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 500;
+  }
+
+  .nav-item:hover {
+    background: rgba(217, 179, 95, 0.08) !important;
+  }
+
+  .nav-item.active {
+    background: rgba(217, 179, 95, 0.16) !important;
+    border-color: var(--stroke);
+    color: var(--ink);
+  }
+
+  .main { padding: 18px 0; }
+
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 18px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .hero {
+    display: grid;
+    gap: 18px;
+    padding: 18px;
+    border-radius: 20px;
+    border: 1px solid var(--stroke);
+    background: linear-gradient(135deg, rgba(217, 179, 95, 0.10), rgba(140, 106, 42, 0.16)), var(--card);
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    animation: rise 0.7s ease both;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(217, 179, 95, 0.28), rgba(140, 106, 42, 0.08), transparent 70%);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-title { margin: 0 0 8px; font-size: clamp(28px, 4vw, 46px); letter-spacing: -0.02em; }
+  .hero-sub { margin: 0 0 14px; color: var(--muted); font-size: clamp(14px, 1.6vw, 18px); }
+  .hero-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    border: 1px solid var(--stroke);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    background: rgba(217, 179, 95, 0.12);
+  }
+
+  .hero-panel {
+    position: relative;
+    z-index: 1;
+    border-radius: 16px;
+    border: 1px solid var(--stroke);
+    padding: 14px;
+    background: rgba(14, 12, 10, 0.88);
+    box-shadow: var(--shadow);
+  }
+  .hero-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero-metric { border: 1px solid var(--stroke); border-radius: 12px; padding: 12px; background: rgba(18, 16, 14, 0.86); }
+  .hero-label { font-size: 11px; opacity: .7; }
+  .hero-value { font-size: 18px; margin-top: 4px; }
+
+  h1 { margin: 18px 0 8px; font-size: 20px; }
   p { margin: 0 0 14px; opacity: .85; font-size: 13px; }
 
   .grid { display: grid; gap: 12px; grid-template-columns: repeat(12, 1fr); }
 
   .card {
     grid-column: span 12;
-    background: #121420;
-    border: 1px solid #1f2433;
-    border-radius: 14px;
-    padding: 14px;
+    background: var(--card);
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(8px);
+    animation: rise 0.7s ease both;
   }
 
-  /* Desktop: 3 columns */
+  .card.dashboard { grid-column: span 12; }
+
+  .section-title { display:flex; align-items:center; gap:10px; margin:0 0 8px; font-size:16px; }
+  .section-title span { font-size: 12px; opacity:.7; font-weight: 400; }
+
   @media (min-width: 980px) {
-    .wrap { padding: 24px; }
+    .wrap { padding: 28px; }
+    .hero { grid-template-columns: 1.1fr 0.9fr; padding: 22px; }
     h1 { font-size: 22px; }
     p { font-size: 14px; margin-bottom: 16px; }
 
-    .card { padding: 16px; }
+    .card { padding: 18px; }
     .card.inputs  { grid-column: 1 / span 4; }
     .card.outputs { grid-column: 5 / span 4; }
     .card.table   { grid-column: 9 / span 4; }
     .card.explain { grid-column: 1 / span 12; }
+    .card.dashboard { grid-column: span 6; }
   }
 
-  /* Form rows */
+  @media (max-width: 980px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar {
+      height: auto;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .nav { display: flex; gap: 8px; overflow-x: auto; }
+    .nav-item { white-space: nowrap; }
+  }
+
   .row {
     display: grid;
     gap: 10px;
@@ -58,15 +250,20 @@
 
   input, select, textarea {
     grid-column: span 12;
-    padding: 12px 12px;          /* bigger tap target on mobile */
+    padding: 12px 12px;
     border-radius: 12px;
-    border: 1px solid #27304a;
-    background: #0f1220;
-    color: #e9eef5;
+    border: 1px solid var(--stroke);
+    background: rgba(12, 10, 8, 0.9);
+    color: var(--ink);
     outline: none;
     width: 100%;
     box-sizing: border-box;
-    font-size: 16px;             /* prevents iOS zoom */
+    font-size: 16px;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: rgba(217, 179, 95, 0.8);
+    box-shadow: 0 0 0 3px rgba(217, 179, 95, 0.2);
   }
 
   textarea {
@@ -74,31 +271,20 @@
     resize: vertical;
   }
 
-  /* Field groups */
-  .half, .third{
-    display: grid;
-    gap: 6px;
-    min-width: 0;
-  }
-
+  .half, .third{ display: grid; gap: 6px; min-width: 0; }
   .full { grid-column: span 12 !important; }
+  .half, .third { grid-column: span 12; }
 
-  /* MOBILE: always 1-up */
-  .half { grid-column: span 12; }
-  .third { grid-column: span 12; }
-
-  /* TABLET/DESKTOP: 2-up */
   @media (min-width: 720px) {
     .half  { grid-column: span 6; }
     .third { grid-column: span 6; }
   }
 
-  /* Slightly tighter inputs inside Inputs card (desktop only) */
   @media (min-width: 980px) {
     .card.inputs input,
     .card.inputs select,
     .card.inputs textarea{
-      padding: 9px 10px;
+      padding: 10px 10px;
       font-size: 14px;
       border-radius: 10px;
     }
@@ -107,10 +293,10 @@
   .out { display: grid; gap: 10px; margin-top: 10px; }
 
   .metric {
-    border: 1px solid #1f2433;
+    border: 1px solid var(--stroke);
     border-radius: 12px;
     padding: 12px;
-    background: #0f1220;
+    background: rgba(18, 16, 14, 0.86);
   }
 
   .k { font-size: 12px; opacity: .75; }
@@ -118,7 +304,6 @@
   .small { font-size: 12px; opacity: .8; line-height: 1.45; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
-  /* Buttons: stack nicely on mobile */
   .btns {
     display: grid;
     gap: 10px;
@@ -128,16 +313,16 @@
   button {
     padding: 12px 12px;
     border-radius: 12px;
-    border: 1px solid #27304a;
-    background: #121a33;
-    color: #e9eef5;
+    border: 1px solid rgba(217, 179, 95, 0.6);
+    background: linear-gradient(90deg, #f0c86b, #b48632);
+    color: #1a1208;
     cursor: pointer;
     width: 100%;
+    font-weight: 600;
   }
 
-  button:hover { filter: brightness(1.08); }
+  button:hover { filter: brightness(1.05); }
 
-  /* Tablet+ buttons inline */
   @media (min-width: 720px) {
     .btns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     button { width: auto; }
@@ -146,7 +331,6 @@
   details { margin-top: 10px; }
   summary { cursor: pointer; user-select: none; }
 
-  /* Table */
   table {
     width: 100%;
     border-collapse: collapse;
@@ -155,13 +339,10 @@
     border-radius: 12px;
   }
 
-  /* Only force horizontal scroll behaviour on small screens */
-  @media (max-width: 720px) {
-    table { min-width: 520px; }
-  }
+  @media (max-width: 720px) { table { min-width: 520px; } }
 
   th, td {
-    border-bottom: 1px solid #1f2433;
+    border-bottom: 1px solid rgba(200, 162, 74, 0.18);
     padding: 10px 10px;
     text-align: right;
     white-space: nowrap;
@@ -170,7 +351,7 @@
   th {
     font-size: 12px;
     opacity: .85;
-    background: #0f1220;
+    background: rgba(20, 16, 12, 0.9);
     position: sticky;
     top: 0;
   }
@@ -181,7 +362,7 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: 12px;
-    border: 1px solid #1f2433;
+    border: 1px solid var(--stroke);
   }
 
   .table-wrap table { margin-top: 0; border-radius: 0; }
@@ -200,11 +381,10 @@
     font-size: 12px !important;
   }
 
-  /* Risk flow */
   .flow { display: grid; gap: 12px; margin-top: 10px; }
   .flow-node {
-    border: 1px solid #1f2433;
-    background: #0f1220;
+    border: 1px solid var(--stroke);
+    background: rgba(18, 16, 14, 0.86);
     border-radius: 14px;
     padding: 12px;
   }
@@ -214,217 +394,428 @@
   .flow-grid { display:grid; gap: 8px; margin-top: 10px; }
   @media (min-width: 720px) { .flow-grid { grid-template-columns: 1fr 1fr; } }
 
-  .badge {
-    display:inline-block;
-    border: 1px solid #27304a;
-    border-radius: 999px;
-    padding: 2px 8px;
-    font-size: 12px;
-    opacity: .9;
-  }
-
   .flow-bubble {
-    border: 1px solid #27304a;
+    border: 1px solid var(--stroke);
     border-radius: 999px;
     padding: 6px 10px;
     font-size: 12px;
     width: fit-content;
-    background: #121a33;
+    background: rgba(217, 179, 95, 0.12);
   }
 
   .flow-end {
-    border: 1px dashed #27304a;
+    border: 1px dashed var(--stroke);
     border-radius: 14px;
     padding: 12px;
-    background: rgba(18, 26, 51, 0.35);
+    background: rgba(22, 18, 14, 0.45);
+  }
+
+  .card.accent {
+    border-color: rgba(240, 200, 107, 0.5);
+    box-shadow: 0 0 0 1px rgba(240, 200, 107, 0.2), 0 12px 40px rgba(240, 200, 107, 0.12);
+  }
+
+  .checklist {
+    display: grid;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .checklist label {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 12px;
+    opacity: .85;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .btn-ghost {
+    background: rgba(217, 179, 95, 0.18) !important;
+    border: 1px solid var(--stroke) !important;
+    color: var(--ink) !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+@media (max-width: 720px) {
+    .hero-actions { flex-direction: column; align-items: flex-start; }
+}
+
+  .grand {
+    margin-top: 16px;
+  }
+
+  .grand-card {
+    border: 1px solid var(--stroke);
+    border-radius: 20px;
+    padding: 22px;
+    background: linear-gradient(135deg, rgba(217, 179, 95, 0.08), rgba(140, 106, 42, 0.12)), var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .grand-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .grand-title {
+    margin-top: 10px;
+    font-size: clamp(22px, 3vw, 34px);
+    font-weight: 700;
+  }
+
+  .grand-sub {
+    margin-top: 8px;
+    color: var(--muted);
+    max-width: 720px;
+  }
+
+  .grand-tiles {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .grand-tile {
+    border: 1px solid var(--stroke);
+    border-radius: 14px;
+    padding: 14px;
+    background: rgba(18, 16, 14, 0.9);
+  }
+
+  .grand-label { font-size: 11px; opacity: .7; }
+  .grand-value { margin-top: 6px; font-size: 16px; font-weight: 600; }
+
+  @media (max-width: 900px) {
+    .grand-tiles { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 
 <body>
-<div class="wrap">
-  <h1>Kum XAUUSD+ Calculator</h1>
-  <p>Should update in real time with inputs. Update gold manually the "live data" lags behind quite badly</p>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">Kum XAUUSD+</div>
+    <div class="brand-sub">Trading Command Center</div>
+    <nav class="nav">
+      <button class="nav-item active" type="button" data-panel="dashboard">Dashboard</button>
+      <button class="nav-item" type="button" data-panel="position">Position Sizing</button>
+      <button class="nav-item" type="button" data-panel="price-move">Price Move</button>
+      <button class="nav-item" type="button" data-panel="risk-flow">Risk Flow</button>
+      <button class="nav-item" type="button" data-panel="journal">Journal</button>
+    </nav>
+  </aside>
+  <main class="main">
+    <div class="wrap">
+      <section class="panel active" id="dashboard">
+        <header class="hero">
+          <div class="hero-content">
+            <div class="hero-badges">
+              <div class="badge">XAUUSD+</div>
+              <div class="badge">1:500 Leverage</div>
+            </div>
+            <h1 class="hero-title">Kum XAUUSD+ Trading Command Center</h1>
+            <p class="hero-sub">Isn't this fancy.</p>
+          </div>
+          <div class="hero-panel">
+            
+          <div class="hero-actions">
+            <button id="btnRefreshDataHero" class="btn-ghost" type="button">Update Live Data</button>
+            <span class="small">Pulls XAUUSD + USD → GBP</span>
+          </div><div class="hero-grid">
+              <div class="hero-metric">
+                <div class="hero-label">Live Price</div>
+                <div class="hero-value" id="heroPrice">$—</div>
+              </div>
+              <div class="hero-metric">
+                <div class="hero-label">USD → GBP</div>
+                <div class="hero-value" id="heroFx">—</div>
+              </div>
+              <div class="hero-metric">
+                <div class="hero-label">Pip Value</div>
+                <div class="hero-value" id="heroPip">—</div>
+              </div>
+              <div class="hero-metric">
+                <div class="hero-label">Risk/Reward</div>
+                <div class="hero-value" id="heroRr">—</div>
+              </div>
+            </div>
+          </div>
+        </header>
 
-  <div class="grid">
-    <div class="card inputs">
-      <h2 style="margin:0 0 6px;font-size:16px;">Inputs</h2>
+                        <div class="grand">
+          <div class="grand-card">
+            <div class="grand-kicker">Overview</div>
+            <div class="grand-title">Market Jargon.</div>
+            <div class="grand-sub">Buzzwords Buzzwords Buzzwords.</div>
+            <div class="grand-tiles">
+              <div class="grand-tile">
+                <div class="grand-label">No Profit</div>
+                <div class="grand-value">Stanford</div>
+                <div class="small">No Profit</div>
+              </div>
+              <div class="grand-tile">
+                <div class="grand-label">No Profit</div>
+                <div class="grand-value">Kityo</div>
+                <div class="small">No Profit</div>
+              </div>
+              <div class="grand-tile">
+                <div class="grand-label">No Profit</div>
+                <div class="grand-value">Done</div>
+                <div class="small">No Profit</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div class="row">
-        <div class="third">
-          <label for="price">XAUUSD price (USD / oz)</label>
-          <input id="price" type="number" step="0.01" value="5280" />
-        </div>
+      <section class="panel" id="position">
+        <h1 class="section-title">Control Surface <span>Inputs, outputs, ladder</span></h1>
+        <p class="small">Adjust inputs to recalibrate exposure, margin, and targets. Live feeds are optional; manual override always stays available.</p>
 
-        <div class="third">
-          <label for="usdToGbp">USD → GBP Rate</label>
-          <input id="usdToGbp" type="number" step="0.0001" value="0.74" />
-        </div>
-      </div>
+        <div class="grid">
+          <div class="card inputs accent">
+            <h2 style="margin:0 0 6px;font-size:16px;">Inputs</h2>
 
-      <div class="row">
-        <div class="third">
-          <label for="slPips">Stop-loss distance (pips)</label>
-          <input id="slPips" type="number" step="1" value="100" />
-        </div>
-        <div class="third">
-          <label for="tp1Pips">TP1 distance (pips)</label>
-          <input id="tp1Pips" type="number" step="1" value="30" />
-        </div>
-      </div>
+            <div class="row">
+              <div class="third">
+                <label for="price">XAUUSD price (USD / oz)</label>
+                <input id="price" type="number" step="0.01" value="5280" />
+              </div>
 
-      <div class="row">
-        <div class="third">
-          <label for="tp2Pips">TP2 distance (pips)</label>
-          <input id="tp2Pips" type="number" step="1" value="300" />
-        </div>
-        <div class="third">
-          <label for="lotInput">Single lot size</label>
-          <input id="lotInput" type="number" step="0.01" value="0.10" />
-        </div>
-      </div>
+              <div class="third">
+                <label for="usdToGbp">USD → GBP Rate</label>
+                <input id="usdToGbp" type="number" step="0.0001" value="0.74" />
+              </div>
+            </div>
 
-      <div class="row">
-        <div class="full">
-          <label for="ladderLots">Ladder lot sizes (comma-separated)</label>
-          <textarea id="ladderLots" class="mono">0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5</textarea>
-        </div>
-      </div>
+            <div class="row">
+              <div class="third">
+                <label for="slPips">Stop-loss distance (pips)</label>
+                <input id="slPips" type="number" step="1" value="100" />
+              </div>
+              <div class="third">
+                <label for="tp1Pips">TP1 distance (pips)</label>
+                <input id="tp1Pips" type="number" step="1" value="30" />
+              </div>
+            </div>
 
-      <div class="btns">
-        <button id="btnLoadYourTable">Load your SL/TP defaults</button>
-        <button id="btnRefreshData" type="button">Refresh live data</button>
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;opacity:.85;">
-          <input id="autoLive" type="checkbox" style="width:auto;grid-column:auto;" />
-          Auto-update (every 60s)
-        </label>
-      </div>
+            <div class="row">
+              <div class="third">
+                <label for="tp2Pips">TP2 distance (pips)</label>
+                <input id="tp2Pips" type="number" step="1" value="300" />
+              </div>
+              <div class="third">
+                <label for="lotInput">Single lot size</label>
+                <input id="lotInput" type="number" step="0.01" value="0.10" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="full">
+                <label for="ladderLots">Ladder lot sizes (comma-separated)</label>
+                <textarea id="ladderLots" class="mono">0.01,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5</textarea>
+              </div>
+            </div>
+
+            <div class="btns">
+              <button id="btnLoadYourTable">Load your SL/TP defaults</button>
+              <button id="btnRefreshData" type="button">Refresh live data</button>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;opacity:.85;">
+                <input id="autoLive" type="checkbox" style="width:auto;grid-column:auto;" />
+                Auto-update (every 60s)
+              </label>
+            </div>
+          </div>
+
+          <div class="card outputs">
+            <h2 style="margin:0 0 6px;font-size:16px;">Outputs</h2>
+            <div class="out">
+              <div class="metric">
+                <div class="k">Ounces (oz)</div>
+                <div class="v" id="ozOut">—</div>
+              </div>
+              <div class="metric">
+                <div class="k">Notional value (USD)</div>
+                <div class="v" id="notionalOut">—</div>
+              </div>
+              <div class="metric">
+                <div class="k">Required margin (USD)</div>
+                <div class="v" id="marginOut">—</div>
+              </div>
+              <div class="metric">
+                <div class="k">Pip value (USD / pip)</div>
+                <div class="v" id="pipValueOut">—</div>
+              </div>
+              <div class="metric">
+                <div class="k">SL / TP1 / TP2 (USD)</div>
+                <div class="v" id="targetsOut">—</div>
+                <div class="small" id="targetsDetail">—</div>
+              </div>
+              <div class="metric">
+                <div class="k">Same key figures in GBP</div>
+                <div class="small" id="fxHint">—</div>
+                <div class="small mono" id="acctOut">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card table">
+            <h2 style="margin:0 0 6px;font-size:16px;">Lot Ladder</h2>
+
+            <div class="small ladder-head">
+              <div>
+                Rows are lot sizes. Columns are 1 Pip Move, Hit SL, Hit TP1, Hit TP2.
+                <span class="mono" id="rrOut" style="margin-left:8px;">RR: —</span>
+              </div>
+
+              <button id="toggleTableCurrency" class="btn-mini" type="button">Show GBP</button>
+            </div>
+
+            <div class="table-wrap" style="margin-top:10px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Lot</th>
+                    <th>1 Pip Move</th>
+                    <th>Hit SL</th>
+                    <th>Hit TP1</th>
+                    <th>Hit TP2</th>
+                  </tr>
+                </thead>
+                <tbody id="ladderBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card explain">
+            <h2 style="margin:0 0 6px;font-size:16px;">Show or Collapse Explanation</h2>
+            <details>
+              <summary class="small">Show formulas (Updates with your input)</summary>
+              <div class="small mono" id="explainBlock" style="margin-top:10px; white-space: pre-wrap;">—</div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="price-move">
+        <h1 class="section-title">Price Move <span>Entry/exit P&L</span></h1>
+        <div class="grid">
+          <div class="card">
+            <h2 style="margin:0 0 6px;font-size:16px;">Price Move Calculator</h2>
+            <div class="small">Enter entry price, exit price and lot size to see the potential profit or loss.</div>
+
+            <div class="row">
+              <div class="third">
+                <label for="entryPrice">Entry Price</label>
+                <input id="entryPrice" type="number" step="0.01" value="5000">
+              </div>
+
+              <div class="third">
+                <label for="exitPrice">Exit Price</label>
+                <input id="exitPrice" type="number" step="0.01" value="5100">
+              </div>
+
+              <div class="third">
+                <label for="calcLot">Lot Size</label>
+                <input id="calcLot" type="number" step="0.01" value="0.1">
+              </div>
+            </div>
+
+            <div class="metric" style="margin-top:12px;">
+              <div class="k">Profit / Loss</div>
+              <div class="v" id="priceMoveResult">—</div>
+              <div class="small" id="priceMoveDetail">—</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="risk-flow">
+        <h1 class="section-title">Risk Flow <span>Scenario ladder</span></h1>
+        <div class="grid">
+          <div class="card">
+            <h2 style="margin:0 0 6px;font-size:16px;">Risk Flow (scenario)</h2>
+
+            <div class="row">
+              <div class="third">
+                <label for="startBal">Starting balance (USD)</label>
+                <input id="startBal" type="number" step="0.01" value="300" />
+              </div>
+              <div class="third">
+                <label for="stopBelow">Stop if balance falls below (USD)</label>
+                <input id="stopBelow" type="number" step="0.01" value="0" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="full">
+                <label for="flowLots">Flow lots</label>
+                <input id="flowLots" type="text" value="0.1,0.05,0.03" class="mono" />
+              </div>
+            </div>
+
+            <div id="flow" class="flow"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="journal">
+        <h1 class="section-title">Journal <span>Notes and review</span></h1>
+        <div class="grid">
+          <div class="card">
+            <h2 style="margin:0 0 6px;font-size:16px;">Trade Notes</h2>
+            <div class="small">Auto-saved locally in your browser.</div>
+            <textarea id="journalText" placeholder="Log entries, outcomes, emotions, rules broken, lessons..."></textarea>
+          </div>
+        </div>
+      </section>
     </div>
-
-    <div class="card outputs">
-      <h2 style="margin:0 0 6px;font-size:16px;">Outputs</h2>
-      <div class="out">
-        <div class="metric">
-          <div class="k">Ounces (oz)</div>
-          <div class="v" id="ozOut">—</div>
-        </div>
-        <div class="metric">
-          <div class="k">Notional value (USD)</div>
-          <div class="v" id="notionalOut">—</div>
-        </div>
-        <div class="metric">
-          <div class="k">Required margin (USD)</div>
-          <div class="v" id="marginOut">—</div>
-        </div>
-        <div class="metric">
-          <div class="k">Pip value (USD / pip)</div>
-          <div class="v" id="pipValueOut">—</div>
-        </div>
-        <div class="metric">
-          <div class="k">SL / TP1 / TP2 (USD)</div>
-          <div class="v" id="targetsOut">—</div>
-          <div class="small" id="targetsDetail">—</div>
-        </div>
-        <div class="metric">
-          <div class="k">Same key figures in GBP</div>
-          <div class="small" id="fxHint">—</div>
-          <div class="small mono" id="acctOut">—</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card table">
-      <h2 style="margin:0 0 6px;font-size:16px;">Lot Ladder</h2>
-
-      <div class="small ladder-head">
-        <div>
-          Rows are lot sizes. Columns are 1 Pip Move, Hit SL, Hit TP1, Hit TP2.
-          <span class="mono" id="rrOut" style="margin-left:8px;">RR: —</span>
-        </div>
-
-        <button id="toggleTableCurrency" class="btn-mini" type="button">Show GBP</button>
-      </div>
-
-      <div class="table-wrap" style="margin-top:10px;">
-        <table>
-          <thead>
-            <tr>
-              <th>Lot</th>
-              <th>1 Pip Move</th>
-              <th>Hit SL</th>
-              <th>Hit TP1</th>
-              <th>Hit TP2</th>
-            </tr>
-          </thead>
-          <tbody id="ladderBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-  <h2 style="margin:0 0 6px;font-size:16px;">Price Move Calculator</h2>
-  <div class="small">Enter entry price, exit price and lot size to see the potential profit or loss.</div>
-
-  <div class="row">
-    <div class="third">
-      <label for="entryPrice">Entry Price</label>
-      <input id="entryPrice" type="number" step="0.01" value="5000">
-    </div>
-
-    <div class="third">
-      <label for="exitPrice">Exit Price</label>
-      <input id="exitPrice" type="number" step="0.01" value="5100">
-    </div>
-
-    <div class="third">
-      <label for="calcLot">Lot Size</label>
-      <input id="calcLot" type="number" step="0.01" value="0.1">
-    </div>
-  </div>
-
-  <div class="metric" style="margin-top:12px;">
-    <div class="k">Profit / Loss</div>
-    <div class="v" id="priceMoveResult">—</div>
-    <div class="small" id="priceMoveDetail">—</div>
-  </div>
-</div>
-
-    <div class="card">
-      <h2 style="margin:0 0 6px;font-size:16px;">Risk Flow (scenario)</h2>
-
-      <div class="row">
-        <div class="third">
-          <label for="startBal">Starting balance (USD)</label>
-          <input id="startBal" type="number" step="0.01" value="300" />
-        </div>
-        <div class="third">
-          <label for="stopBelow">Stop if balance falls below (USD)</label>
-          <input id="stopBelow" type="number" step="0.01" value="0" />
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="full">
-          <label for="flowLots">Flow lots</label>
-          <input id="flowLots" type="text" value="0.1,0.05,0.03" class="mono" />
-        </div>
-      </div>
-
-      <div id="flow" class="flow"></div>
-    </div>
-
-    <div class="card explain">
-      <h2 style="margin:0 0 6px;font-size:16px;">Show or Collapse Explanation</h2>
-      <details>
-        <summary class="small">Show formulas (Updates with your input)</summary>
-        <div class="small mono" id="explainBlock" style="margin-top:10px; white-space: pre-wrap;">—</div>
-      </details>
-    </div>
-  </div>
+  </main>
 </div>
 
 <script>
   const $ = (id) => document.getElementById(id);
+
+  const navItems = Array.from(document.querySelectorAll(".nav-item"));
+  const panels = Array.from(document.querySelectorAll(".panel"));
+
+  function setPanel(id) {
+    panels.forEach(p => p.classList.toggle("active", p.id === id));
+    navItems.forEach(n => n.classList.toggle("active", n.dataset.panel === id));
+    localStorage.setItem("activePanel", id);
+  }
+
+  const savedPanel = localStorage.getItem("activePanel") || "dashboard";
+  setPanel(savedPanel);
+
+  navItems.forEach(btn => {
+    btn.addEventListener("click", () => setPanel(btn.dataset.panel));
+  });
+
+  const journal = $("journalText");
+  if (journal) {
+    journal.value = localStorage.getItem("journalText") || "";
+    journal.addEventListener("input", () => {
+      localStorage.setItem("journalText", journal.value);
+    });
+  }
+
+  const heroUpdate = $("btnRefreshDataHero");
+  if (heroUpdate) heroUpdate.addEventListener("click", refreshLiveData);
 
   // Table currency toggle state
   let tableCurrency = "USD"; // "USD" | "GBP"
@@ -601,28 +992,28 @@
   });
 
   function computePriceMove() {
-  const entry = n($("entryPrice")?.value);
-  const exit = n($("exitPrice")?.value);
-  const lot = n($("calcLot")?.value);
+    const entry = n($("entryPrice")?.value);
+    const exit = n($("exitPrice")?.value);
+    const lot = n($("calcLot")?.value);
 
-  if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(lot)) {
-    $("priceMoveResult").textContent = "—";
-    return;
+    if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(lot)) {
+      $("priceMoveResult").textContent = "—";
+      return;
+    }
+
+    const move = exit - entry;
+    const oz = lot * CONTRACT_SIZE;
+
+    const pnl = move * oz;
+
+    const label = pnl >= 0 ? "Profit" : "Loss";
+
+    $("priceMoveResult").textContent =
+      `${label}: ${fmtUsd(pnl)}`;
+
+    $("priceMoveDetail").textContent =
+      `Move: ${fmtNum(move,2)} × ${fmtNum(oz,2)} oz = ${fmtUsd(pnl)}`;
   }
-
-  const move = exit - entry;
-  const oz = lot * CONTRACT_SIZE;
-
-  const pnl = move * oz;
-
-  const label = pnl >= 0 ? "Profit" : "Loss";
-
-  $("priceMoveResult").textContent =
-    `${label}: ${fmtUsd(pnl)}`;
-
-  $("priceMoveDetail").textContent =
-    `Move: ${fmtNum(move,2)} × ${fmtNum(oz,2)} oz = ${fmtUsd(pnl)}`;
-}
 
   // ---- Risk Flow ----
   const flowState = {
@@ -668,7 +1059,7 @@
     let stopped = false;
 
     lots.forEach((lot, i) => {
-      const r = coreForLot(lot, price, slPips, tp1Pips, tp2Pips); // ✅ fixed call
+      const r = coreForLot(lot, price, slPips, tp1Pips, tp2Pips);
       const outcome = flowState.outcomes[i] ?? 2;
       const pnl = outcomePnlUsd(r, outcome);
 
@@ -726,12 +1117,17 @@
       const end = document.createElement("div");
       end.className = "flow-end";
       end.innerHTML = `<div class="flow-title">End day on ${fmtUsd(bal)}</div>
-                       <div class="small">Pray to god we are in profit</div>`;
+                       <div class="small">End-of-day balance projection</div>`;
       flowEl.appendChild(end);
     }
   }
 
   function compute() {
+    const heroPrice = $("heroPrice");
+    const heroFx = $("heroFx");
+    const heroPip = $("heroPip");
+    const heroRr = $("heroRr");
+
     const price = n($("price").value);
 
     const slPips = n($("slPips").value);
@@ -763,8 +1159,8 @@
 
     // FX line (GBP only)
     $("fxHint").textContent = fxOk
-      ? `Using USD→GBP rate: ${fmtNum(rate,4)}`
-      : "Set a valid USD→GBP rate.";
+      ? `Using USD → GBP rate: ${fmtNum(rate,4)}`
+      : "Set a valid USD → GBP rate.";
 
     $("acctOut").textContent = fxOk
       ? `Notional: ${fmtMoney(one.notionalUsd*rate, "GBP")}  |  Margin: ${fmtMoney(one.marginUsd*rate, "GBP")}  |  £/pip: ${fmtMoney(one.pipValueUsd*rate, "GBP")}  |  SL/TP1/TP2: ${fmtMoney(one.slUsd*rate, "GBP")} / ${fmtMoney(one.tp1Usd*rate, "GBP")} / ${fmtMoney(one.tp2Usd*rate, "GBP")}`
@@ -816,6 +1212,11 @@
     $("rrOut").textContent = Number.isFinite(rr)
       ? `RR: 1:${Number.isInteger(rr) ? rr : rr.toFixed(2)}`
       : "RR: —";
+
+    if (heroPrice) heroPrice.textContent = Number.isFinite(price) ? `$${fmtNum(price,2)}` : "$—";
+    if (heroFx) heroFx.textContent = fxOk ? fmtNum(rate,4) : "—";
+    if (heroPip) heroPip.textContent = fmtUsd(one.pipValueUsd);
+    if (heroRr) heroRr.textContent = Number.isFinite(rr) ? `1:${Number.isInteger(rr) ? rr : rr.toFixed(2)}` : "—";
 
     // Explain panel (step-by-step)
     const oz = one.ozExposure;
@@ -882,8 +1283,6 @@
   });
 
   computePriceMove();
-
-  // ✅ call after everything (including flowState) exists
   compute();
 </script>
 </body>

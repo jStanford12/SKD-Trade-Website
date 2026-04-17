@@ -381,6 +381,30 @@
     font-size: 12px !important;
   }
 
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .card-head-copy {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+
+  .card-head-copy h2 {
+    margin: 0 0 6px;
+    font-size: 16px;
+  }
+
+  .card-head .btn-mini {
+    width: auto;
+    white-space: nowrap;
+  }
+
   .flow { display: grid; gap: 12px; margin-top: 10px; }
   .flow-node {
     border: 1px solid var(--stroke);
@@ -717,8 +741,13 @@
         <h1 class="section-title">Price Move <span>Entry/exit P&L</span></h1>
         <div class="grid">
           <div class="card">
-            <h2 style="margin:0 0 6px;font-size:16px;">Price Move Calculator</h2>
-            <div class="small">Enter entry price, exit price and lot size to see the potential profit or loss.</div>
+            <div class="card-head">
+              <div class="card-head-copy">
+                <h2>Price Move Calculator</h2>
+                <div class="small">Enter entry price, exit price and lot size to see the potential profit or loss.</div>
+              </div>
+              <button id="toggleCalcCurrency" class="btn-mini" type="button" data-currency="USD">Show GBP</button>
+            </div>
 
             <div class="row">
               <div class="third">
@@ -809,24 +838,24 @@
 
             <div class="row">
               <div class="third">
-                <label for="genPipSize">Pip Size</label>
-                <input id="genPipSize" type="number" step="0.0001" value="0.01" />
+                <label for="genPipValue">1 Pip/Tick Value</label>
+                <input id="genPipValue" type="number" step="0.01" value="5.00" />
               </div>
 
               <div class="third">
-                <label for="genSlPips">Stop-Loss Distance (Pips)</label>
+                <label for="genSlPips">Stop-Loss Distance (Pips/Ticks)</label>
                 <input id="genSlPips" type="number" step="1" value="100" />
               </div>
             </div>
 
             <div class="row">
               <div class="third">
-                <label for="genTp1Pips">TP1 Distance (Pips)</label>
+                <label for="genTp1Pips">TP1 Distance (Pips/Ticks)</label>
                 <input id="genTp1Pips" type="number" step="1" value="30" />
               </div>
 
               <div class="third">
-                <label for="genTp2Pips">TP2 Distance (Pips)</label>
+                <label for="genTp2Pips">TP2 Distance (Pips/Ticks)</label>
                 <input id="genTp2Pips" type="number" step="1" value="300" />
               </div>
             </div>
@@ -855,7 +884,7 @@
                 <div class="v" id="genMarginOut">—</div>
               </div>
               <div class="metric">
-                <div class="k">P/L Per Pip</div>
+                <div class="k">P/L Per Pip/Tick</div>
                 <div class="v" id="genPipOut">—</div>
               </div>
               <div class="metric">
@@ -994,11 +1023,10 @@
     return { ozExposure, notionalUsd, marginUsd, pipValueUsd, slUsd, tp1Usd, tp2Usd };
   }
 
-  function coreGeneral(lot, contractSize, price, leverage, pipSize, slPips, tp1Pips, tp2Pips) {
+  function coreGeneral(lot, contractSize, price, leverage, pipValue, slPips, tp1Pips, tp2Pips) {
     const units = lot * contractSize;
     const notional = units * price;
     const margin = leverage > 0 ? (notional / leverage) : NaN;
-    const pipValue = units * pipSize;
 
     const sl = -pipValue * slPips;
     const tp1 = pipValue * tp1Pips;
@@ -1102,33 +1130,54 @@
     compute();
   });
 
-  ["entryPrice","exitPrice","calcLot"].forEach(id => {
+  ["entryPrice","exitPrice","calcLot","usdToGbp"].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener("input", computePriceMove);
+    if (el) el.addEventListener("change", computePriceMove);
+  });
+
+  $("toggleCalcCurrency").addEventListener("click", () => {
+    const btn = $("toggleCalcCurrency");
+    const nextCurrency = btn.dataset.currency === "USD" ? "GBP" : "USD";
+    btn.dataset.currency = nextCurrency;
+    btn.textContent = nextCurrency === "USD" ? "Show GBP" : "Show USD";
+    computePriceMove();
   });
 
   function computePriceMove() {
     const entry = n($("entryPrice")?.value);
     const exit = n($("exitPrice")?.value);
     const lot = n($("calcLot")?.value);
+    const usdToGbp = n($("usdToGbp")?.value);
+    const currency = $("toggleCalcCurrency")?.dataset.currency || "USD";
 
     if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(lot)) {
       $("priceMoveResult").textContent = "—";
+      $("priceMoveDetail").textContent = "—";
+      return;
+    }
+
+    if (currency === "GBP" && !Number.isFinite(usdToGbp)) {
+      $("priceMoveResult").textContent = "—";
+      $("priceMoveDetail").textContent = "Enter a valid USD to GBP rate.";
       return;
     }
 
     const move = exit - entry;
     const oz = lot * CONTRACT_SIZE;
 
-    const pnl = move * oz;
+    const pnlUsd = move * oz;
+    const pnl = currency === "GBP" ? pnlUsd * usdToGbp : pnlUsd;
+    const formatter = currency === "GBP" ? fmtGbp : fmtUsd;
 
     const label = pnl >= 0 ? "Profit" : "Loss";
 
     $("priceMoveResult").textContent =
-      `${label}: ${fmtUsd(pnl)}`;
+      `${label}: ${formatter(pnl)}`;
 
-    $("priceMoveDetail").textContent =
-      `Move: ${fmtNum(move,2)} × ${fmtNum(oz,2)} oz = ${fmtUsd(pnl)}`;
+    $("priceMoveDetail").textContent = currency === "GBP"
+      ? `Move: ${fmtNum(move,2)} x ${fmtNum(oz,2)} oz = ${fmtUsd(pnlUsd)} at ${fmtNum(usdToGbp,4)} = ${fmtGbp(pnl)}`
+      : `Move: ${fmtNum(move,2)} x ${fmtNum(oz,2)} oz = ${fmtUsd(pnlUsd)}`;
   }
 
   // ---- Risk Flow ----
@@ -1271,7 +1320,7 @@
     const movePriceTp2 = tp2Pips * PIP_SIZE;
 
     $("targetsDetail").textContent =
-      `SL ${fmtNum(slPips,0)} pips (≈ ${fmtNum(movePriceSl,2)} price/oz), TP1 ${fmtNum(tp1Pips,0)} pips (≈ ${fmtNum(movePriceTp1,2)}), TP2 ${fmtNum(tp2Pips,0)} pips (≈ ${fmtNum(movePriceTp2,2)})`;
+      `SL ${fmtNum(slPips,0)} pips/ticks, TP1 ${fmtNum(tp1Pips,0)} pips/ticks, TP2 ${fmtNum(tp2Pips,0)} pips/ticks`;
 
     // FX line (GBP only)
     $("fxHint").textContent = fxOk
@@ -1390,7 +1439,7 @@
     const price = n($("genPrice")?.value);
     const lot = n($("genLot")?.value);
     const leverage = n($("genLeverage")?.value);
-    const pipSize = n($("genPipSize")?.value);
+    const pipValue = n($("genPipValue")?.value);
     const slPips = n($("genSlPips")?.value);
     const tp1Pips = n($("genTp1Pips")?.value);
     const tp2Pips = n($("genTp2Pips")?.value);
@@ -1398,7 +1447,7 @@
     const rate = n($("usdToGbp")?.value);
     const fxOk = Number.isFinite(rate) && rate > 0;
 
-    const r = coreGeneral(lot, contractSize, price, leverage, pipSize, slPips, tp1Pips, tp2Pips);
+    const r = coreGeneral(lot, contractSize, price, leverage, pipValue, slPips, tp1Pips, tp2Pips);
 
     $("genUnitsOut").textContent = fmtNum(r.units, 2);
     if (currency === "GBP") {
@@ -1426,12 +1475,8 @@
       $("genTargetsOut").textContent = `${fmtUsd(r.sl)} / ${fmtUsd(r.tp1)} / ${fmtUsd(r.tp2)}`;
     }
 
-    const moveSl = slPips * pipSize;
-    const moveTp1 = tp1Pips * pipSize;
-    const moveTp2 = tp2Pips * pipSize;
-
     $("genTargetsDetail").textContent =
-      `SL ${fmtNum(slPips,0)} pips (≈ ${fmtNum(moveSl,2)} price units), TP1 ${fmtNum(tp1Pips,0)} pips (≈ ${fmtNum(moveTp1,2)}), TP2 ${fmtNum(tp2Pips,0)} pips (≈ ${fmtNum(moveTp2,2)})`;
+      `SL ${fmtNum(slPips,0)} pips/ticks, TP1 ${fmtNum(tp1Pips,0)} pips/ticks, TP2 ${fmtNum(tp2Pips,0)} pips/ticks`;
   }
 
   inputs.forEach(el => el.addEventListener("input", compute));
@@ -1451,7 +1496,7 @@
 
   [
     "genContract","genPrice","genLot",
-    "genLeverage","genCurrency","genPipSize","genSlPips",
+    "genLeverage","genCurrency","genPipValue","genSlPips",
     "genTp1Pips","genTp2Pips"
   ].forEach(id => {
     const el = $(id);
@@ -1467,6 +1512,8 @@
 </script>
 </body>
 </html>
+
+
 
 
 

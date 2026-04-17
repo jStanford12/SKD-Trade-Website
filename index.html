@@ -838,7 +838,7 @@
 
             <div class="row">
               <div class="third">
-                <label for="genPipValue">1 Pip/Tick Value</label>
+                <label for="genPipValue">1 Pip/Tick Value Per 1.00 Lot</label>
                 <input id="genPipValue" type="number" step="0.01" value="5.00" />
               </div>
 
@@ -1027,12 +1027,13 @@
     const units = lot * contractSize;
     const notional = units * price;
     const margin = leverage > 0 ? (notional / leverage) : NaN;
+    const pipValueForLot = pipValue * lot;
 
-    const sl = -pipValue * slPips;
-    const tp1 = pipValue * tp1Pips;
-    const tp2 = pipValue * tp2Pips;
+    const sl = -pipValueForLot * slPips;
+    const tp1 = pipValueForLot * tp1Pips;
+    const tp2 = pipValueForLot * tp2Pips;
 
-    return { units, notional, margin, pipValue, sl, tp1, tp2 };
+    return { units, notional, margin, pipValue: pipValueForLot, sl, tp1, tp2 };
   }
 
   async function fetchUsdGbp() {

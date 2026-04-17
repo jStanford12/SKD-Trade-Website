@@ -819,7 +819,7 @@
               </div>
 
               <div class="third">
-                <label for="genPrice">Current Market Price</label>
+                <label for="genPrice">Entry / Current Price</label>
                 <input id="genPrice" type="number" step="0.01" value="24.50" />
               </div>
             </div>
@@ -843,20 +843,27 @@
               </div>
 
               <div class="third">
-                <label for="genSlPips">Stop-Loss Distance (Pips/Ticks)</label>
-                <input id="genSlPips" type="number" step="1" value="100" />
+                <label for="genTickSize">Price Move Per Pip/Tick</label>
+                <input id="genTickSize" type="number" step="0.0001" value="0.01" />
               </div>
             </div>
 
             <div class="row">
               <div class="third">
-                <label for="genTp1Pips">TP1 Distance (Pips/Ticks)</label>
-                <input id="genTp1Pips" type="number" step="1" value="30" />
+                <label for="genSlLevel">Stop-Loss Level</label>
+                <input id="genSlLevel" type="number" step="0.01" value="23.50" />
               </div>
 
               <div class="third">
-                <label for="genTp2Pips">TP2 Distance (Pips/Ticks)</label>
-                <input id="genTp2Pips" type="number" step="1" value="300" />
+                <label for="genTp1Level">TP1 Level</label>
+                <input id="genTp1Level" type="number" step="0.01" value="24.80" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="third">
+                <label for="genTp2Level">TP2 Level</label>
+                <input id="genTp2Level" type="number" step="0.01" value="27.50" />
               </div>
             </div>
           </div>
@@ -1023,17 +1030,22 @@
     return { ozExposure, notionalUsd, marginUsd, pipValueUsd, slUsd, tp1Usd, tp2Usd };
   }
 
-  function coreGeneral(lot, contractSize, price, leverage, pipValue, slPips, tp1Pips, tp2Pips) {
+  function coreGeneral(lot, contractSize, price, leverage, pipValue, tickSize, slLevel, tp1Level, tp2Level) {
     const units = lot * contractSize;
     const notional = units * price;
     const margin = leverage > 0 ? (notional / leverage) : NaN;
     const pipValueForLot = pipValue * lot;
+    const tickDivisor = Number.isFinite(tickSize) && tickSize > 0 ? tickSize : NaN;
 
-    const sl = -pipValueForLot * slPips;
-    const tp1 = pipValueForLot * tp1Pips;
-    const tp2 = pipValueForLot * tp2Pips;
+    const slTicks = Number.isFinite(tickDivisor) ? Math.abs(price - slLevel) / tickDivisor : NaN;
+    const tp1Ticks = Number.isFinite(tickDivisor) ? Math.abs(tp1Level - price) / tickDivisor : NaN;
+    const tp2Ticks = Number.isFinite(tickDivisor) ? Math.abs(tp2Level - price) / tickDivisor : NaN;
 
-    return { units, notional, margin, pipValue: pipValueForLot, sl, tp1, tp2 };
+    const sl = -pipValueForLot * slTicks;
+    const tp1 = pipValueForLot * tp1Ticks;
+    const tp2 = pipValueForLot * tp2Ticks;
+
+    return { units, notional, margin, pipValue: pipValueForLot, sl, tp1, tp2, slTicks, tp1Ticks, tp2Ticks };
   }
 
   async function fetchUsdGbp() {
@@ -1441,14 +1453,15 @@
     const lot = n($("genLot")?.value);
     const leverage = n($("genLeverage")?.value);
     const pipValue = n($("genPipValue")?.value);
-    const slPips = n($("genSlPips")?.value);
-    const tp1Pips = n($("genTp1Pips")?.value);
-    const tp2Pips = n($("genTp2Pips")?.value);
+    const tickSize = n($("genTickSize")?.value);
+    const slLevel = n($("genSlLevel")?.value);
+    const tp1Level = n($("genTp1Level")?.value);
+    const tp2Level = n($("genTp2Level")?.value);
     const currency = $("genCurrency")?.value || "USD";
     const rate = n($("usdToGbp")?.value);
     const fxOk = Number.isFinite(rate) && rate > 0;
 
-    const r = coreGeneral(lot, contractSize, price, leverage, pipValue, slPips, tp1Pips, tp2Pips);
+    const r = coreGeneral(lot, contractSize, price, leverage, pipValue, tickSize, slLevel, tp1Level, tp2Level);
 
     $("genUnitsOut").textContent = fmtNum(r.units, 2);
     if (currency === "GBP") {
@@ -1477,7 +1490,7 @@
     }
 
     $("genTargetsDetail").textContent =
-      `SL ${fmtNum(slPips,0)} pips/ticks, TP1 ${fmtNum(tp1Pips,0)} pips/ticks, TP2 ${fmtNum(tp2Pips,0)} pips/ticks`;
+      `SL ${fmtNum(slLevel,2)} (${fmtNum(r.slTicks,2)} pips/ticks), TP1 ${fmtNum(tp1Level,2)} (${fmtNum(r.tp1Ticks,2)} pips/ticks), TP2 ${fmtNum(tp2Level,2)} (${fmtNum(r.tp2Ticks,2)} pips/ticks)`;
   }
 
   inputs.forEach(el => el.addEventListener("input", compute));
@@ -1497,8 +1510,8 @@
 
   [
     "genContract","genPrice","genLot",
-    "genLeverage","genCurrency","genPipValue","genSlPips",
-    "genTp1Pips","genTp2Pips"
+    "genLeverage","genCurrency","genPipValue","genTickSize",
+    "genSlLevel","genTp1Level","genTp2Level"
   ].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener("input", computeGeneral);
